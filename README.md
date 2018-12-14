@@ -1,6 +1,7 @@
 # Receivex
 
 [![Build Status](https://travis-ci.com/maartenvanvliet/receivex.svg?branch=master)](https://travis-ci.com/maartenvanvliet/receivex) [![Hex pm](http://img.shields.io/hexpm/v/receivex.svg?style=flat)](https://hex.pm/packages/receivex) [![Hex Docs](https://img.shields.io/badge/hex-docs-9768d1.svg)](https://hexdocs.pm/receivex) [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
 Package to deal with inbound email webhooks for several providers. Right now 
 Mailgun and Mandrill are supported.
 
@@ -22,7 +23,7 @@ Place the Receivex plug before the Plug.Parsers. This is necessary for
 access to the raw body for checking the webhook signatures in some services
 
 Example configuration for Mandrill
-```
+```elixir
 plug(Receivex,
   path: "/_incoming",
   adapter: Receivex.Adapter.Mandrill,
@@ -35,7 +36,7 @@ plug(Receivex,
 ```
 
 Example configuration for Mailgun
-```
+```elixir
 plug(Receivex,
   path: "/_incoming",
   adapter: Receivex.Adapter.Mailgun,
@@ -47,7 +48,7 @@ plug(Receivex,
 ```
 
 Example processor
-```
+```elixir
   defmodule Example.Processor do
     @behaviour Receivex.Handler
 
