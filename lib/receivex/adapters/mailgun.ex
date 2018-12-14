@@ -34,10 +34,9 @@ defmodule Receivex.Adapter.Mailgun do
 
     signature =
       :crypto.hmac(:sha256, api_key, data)
-      |> Base.encode16()
+      |> Base.encode16(case: :lower)
 
     Plug.Crypto.secure_compare(signature, expected_signature)
-    true
   end
 
   defp valid_webhook_request?(_, _), do: false

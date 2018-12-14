@@ -38,6 +38,7 @@ defmodule Receivex.MixProject do
   defp deps do
     [
       {:plug, "~> 1.7.0"},
+      {:jason, ">= 0.0.0", only: :test},
       {:ex_doc, ">= 0.0.0", only: :dev}
     ]
   end
