@@ -2,31 +2,26 @@ defmodule Receivex do
   @moduledoc """
   Documentation for Receivex.
 
-  Place the Receivex plug before the Plug.Parsers. This is necessary for
-  access to the raw body for checking the webhook signatures in some services
-
   Example configuration for Mandrill
   ```
-  plug(Receivex,
-    path: "/_incoming",
+  forward("_incoming", to: Receivex, init_opts: [
     adapter: Receivex.Adapter.Mandrill,
     adapter_opts: [
       secret: "i8PTcm8glMgsfaWf75bS1FQ",
       url: "http://example.com"
     ],
-    handler: Example.Processor
+    handler: Example.Processor]
   )
   ```
 
   Example configuration for Mailgun
   ```
-  plug(Receivex,
-    path: "/_incoming",
+  forward("_incoming", to: Receivex, init_opts: [
     adapter: Receivex.Adapter.Mailgun,
     adapter_opts: [
       api_key: "some-key"
     ],
-    handler: Example.Processor
+    handler: Example.Processor]
   )
   ```
 
@@ -52,27 +47,20 @@ defmodule Receivex do
 
     adapter = Keyword.fetch!(opts, :adapter)
     adapter_opts = Keyword.fetch!(opts, :adapter_opts)
-    path = Keyword.fetch!(opts, :path)
 
-    {path, adapter, adapter_opts, handler}
+    {adapter, adapter_opts, handler}
   end
 
   @impl true
   def call(conn, opts) do
-    {path, adapter, adapter_opts, handler} = opts
+    {adapter, adapter_opts, handler} = opts
 
-    case conn.request_path do
-      ^path ->
-        case adapter.handle_webhook(conn, handler, adapter_opts) do
-          {:ok, conn} ->
-            conn |> send_resp(:ok, "ok") |> halt()
+    case adapter.handle_webhook(conn, handler, adapter_opts) do
+      {:ok, conn} ->
+        conn |> send_resp(:ok, "ok") |> halt()
 
-          {:error, conn, message} ->
-            conn |> send_resp(:forbidden, message) |> halt()
-        end
-
-      _ ->
-        conn
+      {:error, conn, message} ->
+        conn |> send_resp(:forbidden, "bad signature") |> halt()
     end
   end
 end

@@ -3,8 +3,6 @@ defmodule Receivex.Adapter.Mailgun do
   @behaviour Receivex.Adapter
 
   def handle_webhook(conn, handler, opts) do
-    conn = parse_request(conn)
-
     payload = conn.body_params
 
     api_key = Keyword.fetch!(opts, :api_key)
@@ -18,12 +16,8 @@ defmodule Receivex.Adapter.Mailgun do
         {:ok, conn}
 
       _ ->
-        {:error, conn, "Bad signature"}
+        {:error, conn}
     end
-  end
-
-  defp parse_request(conn) do
-    Plug.Parsers.call(conn, Plug.Parsers.init(parsers: [:urlencoded, :multipart]))
   end
 
   defp valid_webhook_request?(

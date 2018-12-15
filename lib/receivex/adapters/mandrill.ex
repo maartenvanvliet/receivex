@@ -24,21 +24,12 @@ defmodule Receivex.Adapter.Mandrill do
         {:ok, conn}
 
       {:error, conn} ->
-        {:error, conn, "Bad signature"}
+        {:error, conn}
     end
   end
 
-  defp parse_request(conn) do
-    Plug.Parsers.call(
-      conn,
-      Plug.Parsers.init(parsers: [:urlencoded])
-    )
-  end
-
   defp verify_header(conn, url, secret) do
-    conn = parse_request(conn)
-
-    signature = build_signature(url, conn.params, secret)
+    signature = build_signature(url, conn.body_params, secret)
     [expected] = Plug.Conn.get_req_header(conn, @mandrill_header)
 
     if Plug.Crypto.secure_compare(signature, expected) do

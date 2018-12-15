@@ -19,31 +19,39 @@ def deps do
 end
 ```
 
-Place the Receivex plug before the Plug.Parsers. This is necessary for
-access to the raw body for checking the webhook signatures in some services
 
-Example configuration for Mandrill
+Example configuration for Mandrill with the Plug router
 ```elixir
-plug(Receivex,
-  path: "/_incoming",
+forward("_incoming", to: Receivex, init_opts: [
   adapter: Receivex.Adapter.Mandrill,
   adapter_opts: [
     secret: "i8PTcm8glMgsfaWf75bS1FQ",
     url: "http://example.com"
   ],
-  handler: Example.Processor
+  handler: Example.Processor]
 )
 ```
 
-Example configuration for Mailgun
+Example configuration for Mandrill with the Phoenix router
 ```elixir
-plug(Receivex,
-  path: "/_incoming",
+forward("_incoming", Receivex, [
+  adapter: Receivex.Adapter.Mandrill,
+  adapter_opts: [
+    secret: "i8PTcm8glMgsfaWf75bS1FQ",
+    url: "http://example.com"
+  ],
+  handler: Example.Processor]
+)
+```
+
+Example configuration for Mailgun with the Plug router
+```elixir
+forward("_incoming", to: Receivex, init_opts: [
   adapter: Receivex.Adapter.Mailgun,
   adapter_opts: [
     api_key: "some-key"
   ],
-  handler: Example.Processor
+  handler: Example.Processor]
 )
 ```
 

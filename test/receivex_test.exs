@@ -15,12 +15,6 @@ defmodule ReceivexTest do
 
     @impl true
     def handle_webhook(conn, handler, _opts) do
-      conn =
-        Plug.Parsers.call(
-          conn,
-          Plug.Parsers.init(parsers: [:urlencoded])
-        )
-
       case conn.body_params do
         %{"invalid" => "true"} ->
           {:error, conn, "Invalid"}
@@ -46,7 +40,6 @@ defmodule ReceivexTest do
   end
 
   @opts Receivex.init(
-          path: "/_incoming",
           adapter: TestAdapter,
           adapter_opts: [],
           handler: TestProcessor
@@ -57,6 +50,7 @@ defmodule ReceivexTest do
       conn(:post, "/_incoming", "subject=Hello+World&from=test%40example.com")
       |> put_req_header("content-type", "application/x-www-form-urlencoded")
 
+    conn = Plug.Parsers.call(conn, Plug.Parsers.init(parsers: [:urlencoded, :multipart]))
     conn = Receivex.call(conn, @opts)
     assert 200 == conn.status
     assert conn.halted
@@ -77,21 +71,12 @@ defmodule ReceivexTest do
       conn(:post, "/_incoming", "invalid=true&subject=Hello+World&from=test%40example.com")
       |> put_req_header("content-type", "application/x-www-form-urlencoded")
 
+    conn = Plug.Parsers.call(conn, Plug.Parsers.init(parsers: [:urlencoded, :multipart]))
     conn = Receivex.call(conn, @opts)
 
     assert 403 == conn.status
     assert conn.halted
 
-    refute_receive {:email, _}
-  end
-
-  test "skips plug if path doesn't match" do
-    conn =
-      conn(:post, "/_bogus_path", "subject=Hello+World&from=test%40example.com")
-      |> put_req_header("content-type", "application/x-www-form-urlencoded")
-
-    conn = Receivex.call(conn, @opts)
-    refute conn.halted
     refute_receive {:email, _}
   end
 end

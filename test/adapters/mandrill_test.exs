@@ -16,6 +16,7 @@ defmodule Receivex.Adapter.MandrillTest do
     conn(:post, "/_incoming", "mandrill_events=" <> params)
     |> put_req_header("content-type", "application/x-www-form-urlencoded")
     |> put_req_header("x-mandrill-signature", "Isdz1IXVrMypOLqoVlY+5iqBeNc=")
+    |> Plug.Parsers.call(Plug.Parsers.init(parsers: [:urlencoded, :multipart]))
   end
 
   test "processes valid webhook" do
@@ -33,7 +34,7 @@ defmodule Receivex.Adapter.MandrillTest do
   test "returns error for valid webhook" do
     conn = setup_webhook()
 
-    {:error, _conn, "Bad signature"} =
+    {:error, _conn} =
       Receivex.Adapter.Mandrill.handle_webhook(conn, TestProcessor,
         url: "http://example.com/_incoming",
         secret: "incorrect secret"
