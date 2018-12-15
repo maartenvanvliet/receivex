@@ -9,7 +9,7 @@ defmodule ReceivexTest do
     def handle_webhook(conn, handler, _opts) do
       case conn.body_params do
         %{"invalid" => "true"} ->
-          {:error, conn, "Invalid"}
+          {:error, conn}
 
         _ ->
           email = normalize_params(conn.body_params)
