@@ -2,14 +2,6 @@ defmodule ReceivexTest do
   use ExUnit.Case
   use Plug.Test
 
-  defmodule TestProcessor do
-    @behaviour Receivex.Handler
-
-    def process(email) do
-      send(self(), {:email, email})
-    end
-  end
-
   defmodule TestAdapter do
     @behaviour Receivex.Adapter
 

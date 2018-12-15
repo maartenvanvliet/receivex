@@ -1,41 +1,70 @@
 defmodule Receivex do
   @moduledoc """
-  Documentation for Receivex.
+  Package to deal with inbound email webhooks for several providers. Right now
+  Mailgun and Mandrill are supported.
 
-  Example configuration for Mandrill
+
+  ## Installation
+
+  If [available in Hex](https://hex.pm/docs/publish), the package can be installed
+  by adding `receivex` to your list of dependencies in `mix.exs`:
+
+  ```elixir
+  def deps do
+  [
+    {:receivex, "~> 0.8.0"}
+  ]
+  end
   ```
+
+
+  Example configuration for Mandrill with the Plug router
+  ```elixir
   forward("_incoming", to: Receivex, init_opts: [
-    adapter: Receivex.Adapter.Mandrill,
-    adapter_opts: [
-      secret: "i8PTcm8glMgsfaWf75bS1FQ",
-      url: "http://example.com"
-    ],
-    handler: Example.Processor]
+  adapter: Receivex.Adapter.Mandrill,
+  adapter_opts: [
+    secret: "i8PTcm8glMgsfaWf75bS1FQ",
+    url: "http://example.com"
+  ],
+  handler: Example.Processor]
   )
   ```
 
-  Example configuration for Mailgun
+  Example configuration for Mandrill with the Phoenix router
+  ```elixir
+  forward("_incoming", Receivex, [
+  adapter: Receivex.Adapter.Mandrill,
+  adapter_opts: [
+    secret: "i8PTcm8glMgsfaWf75bS1FQ",
+    url: "http://example.com"
+  ],
+  handler: Example.Processor]
+  )
   ```
+
+  Example configuration for Mailgun with the Plug router
+  ```elixir
   forward("_incoming", to: Receivex, init_opts: [
-    adapter: Receivex.Adapter.Mailgun,
-    adapter_opts: [
-      api_key: "some-key"
-    ],
-    handler: Example.Processor]
+  adapter: Receivex.Adapter.Mailgun,
+  adapter_opts: [
+    api_key: "some-key"
+  ],
+  handler: Example.Processor]
   )
   ```
 
   Example processor
-  ```
-    defmodule Example.Processor do
-      @behaviour Receivex.Handler
+  ```elixir
+  defmodule Example.Processor do
+    @behaviour Receivex.Handler
 
-      def handle(%Receivex.Email{} = mail) do
-        IO.inspect(mail)
-      end
+    def process(%Receivex.Email{} = mail) do
+      IO.inspect(mail)
     end
+  end
 
   ```
+
   """
 
   import Plug.Conn

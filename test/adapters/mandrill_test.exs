@@ -19,6 +19,18 @@ defmodule Receivex.Adapter.MandrillTest do
     |> Plug.Parsers.call(Plug.Parsers.init(parsers: [:urlencoded, :multipart]))
   end
 
+  test "returns for head req" do
+    conn = setup_webhook()
+
+    {:ok, _conn} =
+      Receivex.Adapter.Mandrill.handle_webhook(%{conn | method: "HEAD"}, TestProcessor,
+        url: "http://example.com/_incoming",
+        secret: "secret"
+      )
+
+    refute_receive {:email, %Receivex.Email{}}
+  end
+
   test "processes valid webhook" do
     conn = setup_webhook()
 
