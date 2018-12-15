@@ -8,10 +8,15 @@ defmodule Receivex.Adapter.Mandrill do
   def handle_webhook(%{method: "HEAD"} = conn, _, _opts), do: {:ok, conn}
 
   def handle_webhook(conn, handler, opts) do
-    case verify_header(conn, opts) do
+    url = Keyword.fetch!(opts, :url)
+    secret = Keyword.fetch!(opts, :secret)
+
+    case verify_header(conn, url, secret) do
       {:ok, conn} ->
+        json_decoder = Keyword.get(opts, :json_decoder, Jason)
+
         conn.params
-        |> build_emails(opts)
+        |> build_emails(json_decoder)
         |> Enum.each(fn email ->
           handler.process(email)
         end)
@@ -23,17 +28,14 @@ defmodule Receivex.Adapter.Mandrill do
     end
   end
 
-  def parse_request(conn) do
+  defp parse_request(conn) do
     Plug.Parsers.call(
       conn,
       Plug.Parsers.init(parsers: [:urlencoded])
     )
   end
 
-  defp verify_header(conn, opts) do
-    url = Keyword.fetch!(opts, :url)
-    secret = Keyword.fetch!(opts, :secret)
-
+  defp verify_header(conn, url, secret) do
     conn = parse_request(conn)
 
     signature = build_signature(url, conn.params, secret)
@@ -62,8 +64,7 @@ defmodule Receivex.Adapter.Mandrill do
     signature
   end
 
-  defp build_emails(%{"mandrill_events" => events}, opts) do
-    json_decoder = Keyword.get(opts, :json_decoder, Jason)
+  defp build_emails(%{"mandrill_events" => events}, json_decoder) do
     {:ok, events} = json_decoder.decode(events)
 
     events

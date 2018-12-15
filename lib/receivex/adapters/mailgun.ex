@@ -22,7 +22,7 @@ defmodule Receivex.Adapter.Mailgun do
     end
   end
 
-  def parse_request(conn) do
+  defp parse_request(conn) do
     Plug.Parsers.call(conn, Plug.Parsers.init(parsers: [:urlencoded, :multipart]))
   end
 
