@@ -88,7 +88,7 @@ defmodule Receivex do
       {:ok, conn} ->
         conn |> send_resp(:ok, "ok") |> halt()
 
-      {:error, conn, message} ->
+      {:error, conn} ->
         conn |> send_resp(:forbidden, "bad signature") |> halt()
     end
   end
