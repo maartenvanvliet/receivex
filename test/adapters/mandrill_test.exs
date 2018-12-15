@@ -2,14 +2,6 @@ defmodule Receivex.Adapter.MandrillTest do
   use ExUnit.Case
   use Plug.Test
 
-  defmodule TestProcessor do
-    @behaviour Receivex.Handler
-
-    def process(email) do
-      send(self(), {:email, email})
-    end
-  end
-
   defp setup_webhook do
     params = "./test/fixtures/mandrill.json" |> File.read!() |> URI.encode_www_form()
 
