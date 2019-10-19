@@ -2,6 +2,8 @@ defmodule Receivex.Adapter.MandrillTest do
   use ExUnit.Case
   use Plug.Test
 
+  alias Receivex.Adapter
+
   defp setup_webhook do
     params = "./test/fixtures/mandrill.json" |> File.read!() |> URI.encode_www_form()
 
@@ -15,7 +17,7 @@ defmodule Receivex.Adapter.MandrillTest do
     conn = setup_webhook()
 
     {:ok, _conn} =
-      Receivex.Adapter.Mandrill.handle_webhook(%{conn | method: "HEAD"}, TestProcessor,
+      Adapter.Mandrill.handle_webhook(%{conn | method: "HEAD"}, TestProcessor,
         url: "http://example.com/_incoming",
         secret: "secret"
       )
@@ -27,7 +29,7 @@ defmodule Receivex.Adapter.MandrillTest do
     conn = setup_webhook()
 
     {:ok, _conn} =
-      Receivex.Adapter.Mandrill.handle_webhook(conn, TestProcessor,
+      Adapter.Mandrill.handle_webhook(conn, TestProcessor,
         url: "http://example.com/_incoming",
         secret: "secret"
       )
@@ -39,7 +41,7 @@ defmodule Receivex.Adapter.MandrillTest do
     conn = setup_webhook()
 
     {:error, _conn} =
-      Receivex.Adapter.Mandrill.handle_webhook(conn, TestProcessor,
+      Adapter.Mandrill.handle_webhook(conn, TestProcessor,
         url: "http://example.com/_incoming",
         secret: "incorrect secret"
       )
@@ -58,6 +60,6 @@ defmodule Receivex.Adapter.MandrillTest do
              subject: "This is an example webhook message",
              text: "This is an example inbound message.\n",
              to: [{nil, "example@example.com"}]
-           } == Receivex.Adapter.Mandrill.normalize_params(event1)
+           } == Adapter.Mandrill.normalize_params(event1)
   end
 end
