@@ -1,4 +1,7 @@
 defmodule Receivex.Email do
+  @moduledoc """
+  Struct modeling incoming email
+  """
   @type address :: {String.t(), String.t()}
 
   @type t :: %__MODULE__{
