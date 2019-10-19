@@ -38,8 +38,9 @@ defmodule Receivex.MixProject do
   defp deps do
     [
       {:plug, "~> 1.8.3"},
-      {:jason, ">= 0.0.0", only: :test},
-      {:ex_doc, ">= 0.0.0", only: :dev}
+      {:jason, ">= 0.0.0", only: [:dev, :test]},
+      {:ex_doc, ">= 0.0.0", only: :dev},
+      {:credo, "~> 1.1.1", only: [:dev, :test], runtime: false}
     ]
   end
 end

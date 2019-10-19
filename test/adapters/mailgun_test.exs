@@ -2,6 +2,8 @@ defmodule Receivex.Adapter.MailgunTest do
   use ExUnit.Case
   use Plug.Test
 
+  alias Receivex.Adapter
+
   @mailgun_params %{
     "Content-Type" => "multipart/mixed; boundary=\"------------020601070403020003080006\"",
     "Date" => "Fri, 26 Apr 2013 11:50:29 -0700",
@@ -59,8 +61,7 @@ defmodule Receivex.Adapter.MailgunTest do
   test "processes valid webhook" do
     conn = setup_webhook()
 
-    {:ok, _conn} =
-      Receivex.Adapter.Mailgun.handle_webhook(conn, TestProcessor, api_key: "some key")
+    {:ok, _conn} = Adapter.Mailgun.handle_webhook(conn, TestProcessor, api_key: "some key")
 
     assert_receive {:email, %Receivex.Email{}}
   end
@@ -69,7 +70,7 @@ defmodule Receivex.Adapter.MailgunTest do
     conn = setup_webhook()
 
     {:error, _conn} =
-      Receivex.Adapter.Mailgun.handle_webhook(conn, TestProcessor, api_key: "incorrect key")
+      Adapter.Mailgun.handle_webhook(conn, TestProcessor, api_key: "incorrect key")
 
     refute_receive {:email, %Receivex.Email{}}
   end
@@ -85,6 +86,6 @@ defmodule Receivex.Adapter.MailgunTest do
              subject: "Re: Sample POST request",
              text: text,
              to: [{"Alice", "alice@mg.example.com"}]
-           } == Receivex.Adapter.Mailgun.normalize_params(@mailgun_params)
+           } == Adapter.Mailgun.normalize_params(@mailgun_params)
   end
 end
