@@ -3,6 +3,7 @@ defmodule Receivex.Adapter.MailgunTest do
   use Plug.Test
 
   alias Receivex.Adapter
+
   @mailgun_params %{
     "Content-Type" => "multipart/mixed; boundary=\"------------020601070403020003080006\"",
     "Date" => "Fri, 26 Apr 2013 11:50:29 -0700",
@@ -60,8 +61,7 @@ defmodule Receivex.Adapter.MailgunTest do
   test "processes valid webhook" do
     conn = setup_webhook()
 
-    {:ok, _conn} =
-      Adapter.Mailgun.handle_webhook(conn, TestProcessor, api_key: "some key")
+    {:ok, _conn} = Adapter.Mailgun.handle_webhook(conn, TestProcessor, api_key: "some key")
 
     assert_receive {:email, %Receivex.Email{}}
   end
