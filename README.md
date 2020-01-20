@@ -14,7 +14,7 @@ by adding `receivex` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:receivex, "~> 0.7.0"}
+    {:receivex, "~> 0.8.2"}
   ]
 end
 ```
