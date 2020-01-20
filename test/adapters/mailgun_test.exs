@@ -7,7 +7,7 @@ defmodule Receivex.Adapter.MailgunTest do
   @mailgun_params %{
     "Content-Type" => "multipart/mixed; boundary=\"------------020601070403020003080006\"",
     "Date" => "Fri, 26 Apr 2013 11:50:29 -0700",
-    "From" => "Bob <bob@mg.example.com>",
+    "From" => "From Bob <bob@mg.example.com>",
     "In-Reply-To" => "<517AC78B.5060404@mg.example.com>",
     "Message-Id" => "<517ACC75.5010709@mg.example.com>",
     "Mime-Version" => "1.0",
@@ -16,7 +16,7 @@ defmodule Receivex.Adapter.MailgunTest do
     "References" => "<517AC78B.5060404@mg.example.com>",
     "Sender" => "bob@mg.example.com",
     "Subject" => "Re: Sample POST request",
-    "To" => "Alice <alice@mg.example.com>",
+    "To" => "To Alice <alice@mg.example.com>",
     "User-Agent" => "Mozilla/5.0 (X11; Linux x86_64; rv:17.0) Gecko/20130308 Thunderbird/17.0.4",
     "X-Mailgun-Variables" => "{\"my_var_1\": \"Mailgun Variable #1\", \"my-var-2\": \"awesome\"}",
     "attachment-1" => %Plug.Upload{
@@ -80,12 +80,12 @@ defmodule Receivex.Adapter.MailgunTest do
     text = @mailgun_params["body-plain"]
 
     assert %Receivex.Email{
-             from: {"Bob", "bob@mg.example.com"},
+             from: {"From Bob", "bob@mg.example.com"},
              html: html,
              sender: "bob@mg.example.com",
              subject: "Re: Sample POST request",
              text: text,
-             to: [{"Alice", "alice@mg.example.com"}]
+             to: [{"To Alice", "alice@mg.example.com"}]
            } == Adapter.Mailgun.normalize_params(@mailgun_params)
   end
 end
