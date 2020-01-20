@@ -1,10 +1,12 @@
 defmodule Receivex.MixProject do
   use Mix.Project
 
+  @version "0.8.2"
+
   def project do
     [
       app: :receivex,
-      version: "0.8.1",
+      version: @version,
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
