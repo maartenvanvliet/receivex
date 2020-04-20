@@ -39,7 +39,7 @@ defmodule Receivex.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:plug, "~> 1.8.3"},
+      {:plug, "~> 1.10.0"},
       {:jason, ">= 0.0.0", only: [:dev, :test]},
       {:ex_doc, ">= 0.0.0", only: :dev},
       {:credo, "~> 1.4.0", only: [:dev, :test], runtime: false}
