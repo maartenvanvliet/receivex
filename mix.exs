@@ -42,7 +42,7 @@ defmodule Receivex.MixProject do
       {:plug, "~> 1.11"},
       {:jason, ">= 0.0.0", only: [:dev, :test]},
       {:ex_doc, ">= 0.0.0", only: :dev},
-      {:credo, "~> 1.5.0", only: [:dev, :test], runtime: false}
+      {:credo, "~> 1.6.0", only: [:dev, :test], runtime: false}
     ]
   end
 end
