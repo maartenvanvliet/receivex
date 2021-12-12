@@ -26,7 +26,9 @@ defmodule Receivex.Adapter.Mailgun do
        ) do
     data = ts <> token
 
-    signature = :crypto.hmac(:sha256, api_key, data) |> Base.encode16(case: :lower)
+    signature =
+      :crypto.mac(:hmac, :sha256, api_key, data)
+      |> Base.encode16(case: :lower)
 
     Plug.Crypto.secure_compare(signature, expected_signature)
   end
