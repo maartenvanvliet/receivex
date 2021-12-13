@@ -49,7 +49,7 @@ defmodule Receivex.Adapter.Mandrill do
       end)
 
     signature =
-      :crypto.hmac(:sha, secret, signed_data)
+      :crypto.mac(:hmac, :sha, secret, signed_data)
       |> Base.encode64()
 
     signature
