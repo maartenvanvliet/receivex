@@ -52,13 +52,30 @@ defmodule Receivex.Adapter.MailgunTest do
     "token" => "cc68b711f7f0de0db07af0ca3836e993068498a3b449e31646"
   }
 
-  @mailgun_params_nested_signature %{
-    @mailgun_params
-    | "signature" => %{
-        "timestamp" => "1544797214",
-        "token" => "cc68b711f7f0de0db07af0ca3836e993068498a3b449e31646",
-        "signature" => "6389a84f6a08275ef70b34a6a4a71380c181ef97b1aea12a47293a116cee60bc"
-      }
+  @mailgun_params_event_data %{
+    "event-data" => %{
+      "envelope" => %{
+        "sender" => "chandler@mg.example.com"
+      },
+      "event" => "delivered",
+      "message" => %{
+        "attachments" => [],
+        "headers" => %{
+          "from" => "Bob <bob@mg.example.com>",
+          "message-id" => "<517ACC75.5010709@mg.example.com>",
+          "subject" => "Re: Sample POST request",
+          "to" => "To Alice <alice@mg.example.com>"
+        },
+        "size" => 6747
+      },
+      "recipient" => "monica@mg.example.com",
+      "timestamp" => 1_544_797_214.955656
+    },
+    "signature" => %{
+      "signature" => "6389a84f6a08275ef70b34a6a4a71380c181ef97b1aea12a47293a116cee60bc",
+      "timestamp" => "1544797214",
+      "token" => "cc68b711f7f0de0db07af0ca3836e993068498a3b449e31646"
+    }
   }
 
   defp setup_webhook(mailgun_params) do
@@ -67,24 +84,22 @@ defmodule Receivex.Adapter.MailgunTest do
     %{conn | body_params: mailgun_params}
   end
 
-  describe "processes valid webhook" do
-    test "unnested signature params" do
-      conn = setup_webhook(@mailgun_params)
+  test "processes valid webhook" do
+    conn = setup_webhook(@mailgun_params)
 
-      {:ok, _conn} =
-        Adapter.Mailgun.handle_webhook(conn, TestProcessor, api_key: "some key")
+    {:ok, _conn} =
+      Adapter.Mailgun.handle_webhook(conn, TestProcessor, api_key: "some key")
 
-      assert_receive {:email, %Receivex.Email{}}
-    end
+    assert_receive {:email, %Receivex.Email{}}
+  end
 
-    test "nested signature params" do
-      conn = setup_webhook(@mailgun_params_nested_signature)
+  test "processes valid 'event-data' webhook" do
+    conn = setup_webhook(@mailgun_params_event_data)
 
-      {:ok, _conn} =
-        Adapter.Mailgun.handle_webhook(conn, TestProcessor, api_key: "some key")
+    {:ok, _conn} =
+      Adapter.Mailgun.handle_webhook(conn, TestProcessor, api_key: "some key")
 
-      assert_receive {:email, %Receivex.Email{}}
-    end
+    assert_receive {:email, %Receivex.Email{}}
   end
 
   test "returns error for valid webhook" do

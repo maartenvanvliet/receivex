@@ -22,14 +22,16 @@ defmodule Receivex.Adapter.Mailgun do
 
   defp valid_webhook_request?(
          %{
-           "signature" => signature = %{
-             "timestamp" => timestamp,
-             "token" => token,
-             "signature" => expected_signature
-           }
+           "signature" =>
+             signature = %{
+               "timestamp" => timestamp,
+               "token" => token,
+               "signature" => expected_signature
+             }
          },
          api_key
-       ) when is_map(signature) do
+       )
+       when is_map(signature) do
     valid_signature?(timestamp, token, expected_signature, api_key)
   end
 
@@ -40,7 +42,8 @@ defmodule Receivex.Adapter.Mailgun do
            "signature" => expected_signature
          },
          api_key
-       ) when is_binary(timestamp) do
+       )
+       when is_binary(timestamp) do
     valid_signature?(timestamp, token, expected_signature, api_key)
   end
 
@@ -54,21 +57,55 @@ defmodule Receivex.Adapter.Mailgun do
     |> Plug.Crypto.secure_compare(expected_signature)
   end
 
-  def normalize_params(email) do
+  def normalize_params(
+        email = %{
+          "event-data" => %{
+            "envelope" => %{
+              "sender" => sender
+            },
+            "message" => %{
+              "headers" => %{
+                "from" => from,
+                "subject" => subject,
+                "to" => to
+              }
+            }
+          }
+        }
+      ) do
     %Receivex.Email{
-      from: from(email),
-      subject: email["subject"],
-      to: recipients(email),
-      sender: email["Sender"],
-      html: email["body-html"],
-      text: email["body-plain"],
+      from: from(from),
+      subject: subject,
+      to: recipients(to),
+      sender: sender,
+      html: nil,
+      text: nil,
       raw_params: email
     }
   end
 
-  defp from(%{"From" => from}) do
-    parse_address(from)
+  def normalize_params(
+        email = %{
+          "From" => from,
+          "Subject" => subject,
+          "To" => to,
+          "Sender" => sender,
+          "body-html" => html,
+          "body-plain" => text
+        }
+      ) do
+    %Receivex.Email{
+      from: from(from),
+      subject: subject,
+      to: recipients(to),
+      sender: sender,
+      html: html,
+      text: text,
+      raw_params: email
+    }
   end
+
+  defp from(from), do: parse_address(from)
 
   @regex ~r/(?<name>.*)<(?<email>.*)>/
   defp parse_address(address) do
@@ -80,7 +117,9 @@ defmodule Receivex.Adapter.Mailgun do
     }
   end
 
-  defp recipients(%{"To" => recipients}) do
-    recipients |> String.split(",") |> Enum.map(fn address -> parse_address(address) end)
+  defp recipients(recipients) do
+    recipients
+    |> String.split(",")
+    |> Enum.map(&parse_address(&1))
   end
 end
