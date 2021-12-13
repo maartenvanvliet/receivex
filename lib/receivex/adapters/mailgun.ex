@@ -21,19 +21,38 @@ defmodule Receivex.Adapter.Mailgun do
   end
 
   defp valid_webhook_request?(
-         %{"timestamp" => ts, "token" => token, "signature" => expected_signature},
+         %{
+           "signature" => signature = %{
+             "timestamp" => timestamp,
+             "token" => token,
+             "signature" => expected_signature
+           }
+         },
          api_key
-       ) do
-    data = ts <> token
+       ) when is_map(signature) do
+    valid_signature?(timestamp, token, expected_signature, api_key)
+  end
 
-    signature =
-      :crypto.mac(:hmac, :sha256, api_key, data)
-      |> Base.encode16(case: :lower)
-
-    Plug.Crypto.secure_compare(signature, expected_signature)
+  defp valid_webhook_request?(
+         %{
+           "timestamp" => timestamp,
+           "token" => token,
+           "signature" => expected_signature
+         },
+         api_key
+       ) when is_binary(timestamp) do
+    valid_signature?(timestamp, token, expected_signature, api_key)
   end
 
   defp valid_webhook_request?(_, _), do: false
+
+  defp valid_signature?(timestamp, token, expected_signature, api_key) do
+    data = timestamp <> token
+
+    :crypto.mac(:hmac, :sha256, api_key, data)
+    |> Base.encode16(case: :lower)
+    |> Plug.Crypto.secure_compare(expected_signature)
+  end
 
   def normalize_params(email) do
     %Receivex.Email{
@@ -42,7 +61,8 @@ defmodule Receivex.Adapter.Mailgun do
       to: recipients(email),
       sender: email["Sender"],
       html: email["body-html"],
-      text: email["body-plain"]
+      text: email["body-plain"],
+      raw_params: email
     }
   end
 

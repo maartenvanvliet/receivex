@@ -10,7 +10,8 @@ defmodule Receivex.Email do
           from: address,
           html: String.t(),
           text: String.t(),
-          subject: String.t()
+          subject: String.t(),
+          raw_params: map()
         }
-  defstruct [:sender, :to, :from, :subject, :html, :text]
+  defstruct [:sender, :to, :from, :subject, :html, :text, :raw_params]
 end

@@ -52,22 +52,43 @@ defmodule Receivex.Adapter.MailgunTest do
     "token" => "cc68b711f7f0de0db07af0ca3836e993068498a3b449e31646"
   }
 
-  defp setup_webhook do
+  @mailgun_params_nested_signature %{
+    @mailgun_params
+    | "signature" => %{
+        "timestamp" => "1544797214",
+        "token" => "cc68b711f7f0de0db07af0ca3836e993068498a3b449e31646",
+        "signature" => "6389a84f6a08275ef70b34a6a4a71380c181ef97b1aea12a47293a116cee60bc"
+      }
+  }
+
+  defp setup_webhook(mailgun_params) do
     conn = conn(:post, "/_incoming", "raw_body")
 
-    %{conn | body_params: @mailgun_params}
+    %{conn | body_params: mailgun_params}
   end
 
-  test "processes valid webhook" do
-    conn = setup_webhook()
+  describe "processes valid webhook" do
+    test "unnested signature params" do
+      conn = setup_webhook(@mailgun_params)
 
-    {:ok, _conn} = Adapter.Mailgun.handle_webhook(conn, TestProcessor, api_key: "some key")
+      {:ok, _conn} =
+        Adapter.Mailgun.handle_webhook(conn, TestProcessor, api_key: "some key")
 
-    assert_receive {:email, %Receivex.Email{}}
+      assert_receive {:email, %Receivex.Email{}}
+    end
+
+    test "nested signature params" do
+      conn = setup_webhook(@mailgun_params_nested_signature)
+
+      {:ok, _conn} =
+        Adapter.Mailgun.handle_webhook(conn, TestProcessor, api_key: "some key")
+
+      assert_receive {:email, %Receivex.Email{}}
+    end
   end
 
   test "returns error for valid webhook" do
-    conn = setup_webhook()
+    conn = setup_webhook(@mailgun_params)
 
     {:error, _conn} =
       Adapter.Mailgun.handle_webhook(conn, TestProcessor, api_key: "incorrect key")
@@ -85,7 +106,8 @@ defmodule Receivex.Adapter.MailgunTest do
              sender: "bob@mg.example.com",
              subject: "Re: Sample POST request",
              text: text,
-             to: [{"To Alice", "alice@mg.example.com"}]
+             to: [{"To Alice", "alice@mg.example.com"}],
+             raw_params: @mailgun_params
            } == Adapter.Mailgun.normalize_params(@mailgun_params)
   end
 end
