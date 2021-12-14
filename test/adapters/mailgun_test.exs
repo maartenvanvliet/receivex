@@ -175,7 +175,7 @@ defmodule Receivex.Adapter.MailgunTest do
   end
 
   test "returns error when incorrect api_key" do
-    conn = setup_webhook(@mailgun_params)
+    conn = setup_webhook(@mailgun_standard_params)
 
     {:error, _conn} =
       Adapter.Mailgun.handle_webhook(conn, TestProcessor, api_key: "incorrect key")
