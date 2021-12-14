@@ -63,13 +63,16 @@ defmodule Receivex.Adapter.Mandrill do
     |> Enum.reject(&is_nil/1)
   end
 
-  def normalize_params(%{"event" => "inbound", "msg" => email}) do
+  def normalize_params(email = %{"event" => event, "msg" => msg}) do
     %Receivex.Email{
-      from: {email["from_name"], email["from_email"]},
-      subject: email["subject"],
-      to: recipients(email),
-      html: email["html"],
-      text: email["text"]
+      message_id: msg["headers"]["Message-Id"],
+      event: event,
+      from: {msg["from_name"], msg["from_email"]},
+      subject: msg["subject"],
+      to: recipients(msg),
+      html: msg["html"],
+      text: msg["text"],
+      raw_params: email
     }
   end
 

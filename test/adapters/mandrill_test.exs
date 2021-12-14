@@ -53,13 +53,16 @@ defmodule Receivex.Adapter.MandrillTest do
     [event1, _] = Jason.decode!(File.read!("./test/fixtures/mandrill.json"))
 
     assert %Receivex.Email{
+             message_id: "<999.20130510192820.aaaaaaaaaaaaaa.aaaaaaaa@mail115.us4.mandrillapp.com>",
+             event: "inbound",
              from: {nil, "example.sender@mandrillapp.com"},
              html:
                "<p>This is an example inbound message.</p><img src=\"http://mandrillapp.com/track/open.php?u=999&id=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&tags=_all,_sendexample.sender@mandrillapp.com\" height=\"1\" width=\"1\">\n",
              sender: nil,
              subject: "This is an example webhook message",
              text: "This is an example inbound message.\n",
-             to: [{nil, "example@example.com"}]
+             to: [{nil, "example@example.com"}],
+             raw_params: event1
            } == Adapter.Mandrill.normalize_params(event1)
   end
 end

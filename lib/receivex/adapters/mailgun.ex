@@ -63,9 +63,11 @@ defmodule Receivex.Adapter.Mailgun do
             "envelope" => %{
               "sender" => sender
             },
+            "event" => event,
             "message" => %{
               "headers" => %{
                 "from" => from,
+                "message-id" => message_id,
                 "subject" => subject,
                 "to" => to
               }
@@ -74,18 +76,38 @@ defmodule Receivex.Adapter.Mailgun do
         }
       ) do
     %Receivex.Email{
+      message_id: message_id,
+      event: event,
+      sender: sender,
+      to: recipients(to),
       from: from(from),
       subject: subject,
-      to: recipients(to),
-      sender: sender,
-      html: nil,
-      text: nil,
       raw_params: email
     }
   end
 
   def normalize_params(
         email = %{
+          "event-data" => %{
+            "event" => event,
+            "message" => %{
+              "headers" => %{
+                "message-id" => message_id,
+              }
+            }
+          }
+        }
+      ) do
+    %Receivex.Email{
+      message_id: message_id,
+      event: event,
+      raw_params: email
+    }
+  end
+
+  def normalize_params(
+        email = %{
+          "Message-Id" => message_id,
           "From" => from,
           "Subject" => subject,
           "To" => to,
@@ -95,10 +117,11 @@ defmodule Receivex.Adapter.Mailgun do
         }
       ) do
     %Receivex.Email{
+      message_id: message_id,
+      sender: sender,
+      to: recipients(to),
       from: from(from),
       subject: subject,
-      to: recipients(to),
-      sender: sender,
       html: html,
       text: text,
       raw_params: email
