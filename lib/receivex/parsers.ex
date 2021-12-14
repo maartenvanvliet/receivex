@@ -1,4 +1,5 @@
 defmodule Receivex.Parsers do
+  @moduledoc false
   def to_datetime(timestamp) when is_integer(timestamp) do
     case DateTime.from_unix(timestamp) do
       {:ok, timestamp} ->

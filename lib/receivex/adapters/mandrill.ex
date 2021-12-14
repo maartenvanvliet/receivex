@@ -5,7 +5,7 @@ defmodule Receivex.Adapter.Mandrill do
   @mandrill_header "x-mandrill-signature"
 
   # Mandrill expects the webhook to respond to head req
-  def handle_webhook(%{method: "HEAD"} = conn, _, _opts), do: {:ok, conn}
+  def handle_webhook(conn = %{method: "HEAD"}, _, _opts), do: {:ok, conn}
 
   def handle_webhook(conn, handler, opts) do
     url = Keyword.fetch!(opts, :url)
