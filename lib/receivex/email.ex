@@ -7,13 +7,13 @@ defmodule Receivex.Email do
   @type t :: %__MODULE__{
           message_id: String.t(),
           event: String.t(),
-          sender: String.t(),
-          to: [address],
-          from: address,
-          subject: String.t(),
-          html: String.t(),
-          text: String.t(),
-          timestamp: DateTime.t(),
+          sender: String.t() | nil,
+          to: [address] | nil,
+          from: address | nil,
+          subject: String.t() | nil,
+          html: String.t() | nil,
+          text: String.t() | nil,
+          timestamp: DateTime.t() | nil,
           raw_params: map()
         }
   defstruct [

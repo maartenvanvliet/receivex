@@ -2,7 +2,7 @@ defmodule Receivex.Adapter.Mailgun do
   @moduledoc false
   @behaviour Receivex.Adapter
 
-  alias Receivex.Parsers
+  import Receivex.Parsers
 
   def handle_webhook(conn, handler, opts) do
     payload = conn.body_params
@@ -59,6 +59,10 @@ defmodule Receivex.Adapter.Mailgun do
     |> Plug.Crypto.secure_compare(expected_signature)
   end
 
+  @doc """
+  Handle Mailgun v3 'event-data' webhook type:
+  https://documentation.mailgun.com/en/latest/api-webhooks.html?highlight=webhooks#webhooks
+  """
   def normalize_params(
         email = %{
           "event-data" => %{
@@ -82,10 +86,10 @@ defmodule Receivex.Adapter.Mailgun do
       message_id: message_id,
       event: event,
       sender: sender,
-      to: recipients(to),
-      from: from(from),
+      to: parse_recipients(to),
+      from: parse_address(from),
       subject: subject,
-      timestamp: Parsers.to_datetime(timestamp),
+      timestamp: parse_timestamp(timestamp),
       raw_params: email
     }
   end
@@ -106,7 +110,7 @@ defmodule Receivex.Adapter.Mailgun do
     %Receivex.Email{
       message_id: message_id,
       event: event,
-      timestamp: Parsers.to_datetime(timestamp),
+      timestamp: parse_timestamp(timestamp),
       raw_params: email
     }
   end
@@ -126,33 +130,15 @@ defmodule Receivex.Adapter.Mailgun do
     %Receivex.Email{
       message_id: message_id,
       sender: sender,
-      to: recipients(to),
-      from: from(from),
+      to: parse_recipients(to),
+      from: parse_address(from),
       subject: subject,
       html: html,
       text: text,
-      timestamp: Parsers.to_datetime(timestamp),
+      timestamp: parse_timestamp(timestamp),
       raw_params: email
     }
   end
 
   def normalize_params(_), do: nil
-
-  defp from(from), do: parse_address(from)
-
-  @regex ~r/(?<name>.*)<(?<email>.*)>/
-  defp parse_address(address) do
-    result = Regex.named_captures(@regex, address)
-
-    {
-      String.trim(result["name"]),
-      String.trim(result["email"])
-    }
-  end
-
-  defp recipients(recipients) do
-    recipients
-    |> String.split(",")
-    |> Enum.map(&parse_address(&1))
-  end
 end
