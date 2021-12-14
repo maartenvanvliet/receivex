@@ -53,7 +53,8 @@ defmodule Receivex.Adapter.MandrillTest do
     [event1, _] = Jason.decode!(File.read!("./test/fixtures/mandrill.json"))
 
     assert %Receivex.Email{
-             message_id: "<999.20130510192820.aaaaaaaaaaaaaa.aaaaaaaa@mail115.us4.mandrillapp.com>",
+             message_id:
+               "<999.20130510192820.aaaaaaaaaaaaaa.aaaaaaaa@mail115.us4.mandrillapp.com>",
              event: "inbound",
              from: {nil, "example.sender@mandrillapp.com"},
              html:

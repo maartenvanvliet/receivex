@@ -3,6 +3,7 @@ defmodule Receivex.Parsers do
     case DateTime.from_unix(timestamp) do
       {:ok, timestamp} ->
         timestamp
+
       _ ->
         nil
     end
@@ -12,6 +13,7 @@ defmodule Receivex.Parsers do
     case timestamp |> Kernel.trunc() |> DateTime.from_unix() do
       {:ok, timestamp} ->
         timestamp
+
       _ ->
         nil
     end

@@ -16,5 +16,16 @@ defmodule Receivex.Email do
           timestamp: DateTime.t(),
           raw_params: map()
         }
-  defstruct [:message_id, :event, :sender, :to, :from, :subject, :html, :text, :timestamp, :raw_params]
+  defstruct [
+    :message_id,
+    :event,
+    :sender,
+    :to,
+    :from,
+    :subject,
+    :html,
+    :text,
+    :timestamp,
+    :raw_params
+  ]
 end
