@@ -63,7 +63,7 @@ defmodule Receivex.Adapter.Mandrill do
     |> Enum.reject(&is_nil/1)
   end
 
-  def normalize_params(email = %{"event" => event, "msg" => msg}) do
+  def normalize_params(email = %{"event" => event, "msg" => msg, "ts" => ts}) do
     %Receivex.Email{
       message_id: msg["headers"]["Message-Id"],
       event: event,
@@ -72,13 +72,12 @@ defmodule Receivex.Adapter.Mandrill do
       to: recipients(msg),
       html: msg["html"],
       text: msg["text"],
+      timestamp: Receivex.Parsers.to_datetime(ts),
       raw_params: email
     }
   end
 
-  def normalize_params(_) do
-    nil
-  end
+  def normalize_params(_), do: nil
 
   defp recipients(%{"to" => recipients}) do
     recipients |> Enum.map(fn [email, name] -> {name, email} end)

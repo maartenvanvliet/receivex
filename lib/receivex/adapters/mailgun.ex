@@ -2,6 +2,8 @@ defmodule Receivex.Adapter.Mailgun do
   @moduledoc false
   @behaviour Receivex.Adapter
 
+  alias Receivex.Parsers
+
   def handle_webhook(conn, handler, opts) do
     payload = conn.body_params
 
@@ -71,7 +73,8 @@ defmodule Receivex.Adapter.Mailgun do
                 "subject" => subject,
                 "to" => to
               }
-            }
+            },
+            "timestamp" => timestamp
           }
         }
       ) do
@@ -82,6 +85,7 @@ defmodule Receivex.Adapter.Mailgun do
       to: recipients(to),
       from: from(from),
       subject: subject,
+      timestamp: Parsers.to_datetime(timestamp),
       raw_params: email
     }
   end
@@ -92,28 +96,31 @@ defmodule Receivex.Adapter.Mailgun do
             "event" => event,
             "message" => %{
               "headers" => %{
-                "message-id" => message_id,
+                "message-id" => message_id
               }
-            }
+            },
+            "timestamp" => timestamp
           }
         }
       ) do
     %Receivex.Email{
       message_id: message_id,
       event: event,
+      timestamp: Parsers.to_datetime(timestamp),
       raw_params: email
     }
   end
 
   def normalize_params(
         email = %{
-          "Message-Id" => message_id,
           "From" => from,
+          "Message-Id" => message_id,
+          "Sender" => sender,
           "Subject" => subject,
           "To" => to,
-          "Sender" => sender,
           "body-html" => html,
-          "body-plain" => text
+          "body-plain" => text,
+          "timestamp" => timestamp
         }
       ) do
     %Receivex.Email{
@@ -124,9 +131,12 @@ defmodule Receivex.Adapter.Mailgun do
       subject: subject,
       html: html,
       text: text,
+      timestamp: Parsers.to_datetime(timestamp),
       raw_params: email
     }
   end
+
+  def normalize_params(_), do: nil
 
   defp from(from), do: parse_address(from)
 

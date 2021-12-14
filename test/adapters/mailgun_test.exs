@@ -84,7 +84,8 @@ defmodule Receivex.Adapter.MailgunTest do
         "headers" => %{
           "message-id" => "<517ACC75.5010709@mg.example.com>"
         }
-      }
+      },
+      "timestamp" => 1_544_797_214.955656
     },
     "signature" => %{
       "signature" => "6389a84f6a08275ef70b34a6a4a71380c181ef97b1aea12a47293a116cee60bc",
@@ -117,6 +118,7 @@ defmodule Receivex.Adapter.MailgunTest do
                subject: "Re: Sample POST request",
                html: @mailgun_standard_params["body-html"],
                text: @mailgun_standard_params["body-plain"],
+               timestamp: ~U[2018-12-14 14:20:14Z],
                raw_params: @mailgun_standard_params
              } == Adapter.Mailgun.normalize_params(@mailgun_standard_params)
     end
@@ -141,6 +143,7 @@ defmodule Receivex.Adapter.MailgunTest do
                subject: "Re: Sample POST request",
                html: @mailgun_event_data_params_one["body-html"],
                text: @mailgun_event_data_params_one["body-plain"],
+               timestamp: ~U[2018-12-14 14:20:14Z],
                raw_params: @mailgun_event_data_params_one
              } == Adapter.Mailgun.normalize_params(@mailgun_event_data_params_one)
     end
@@ -165,6 +168,7 @@ defmodule Receivex.Adapter.MailgunTest do
                subject: nil,
                html: nil,
                text: nil,
+               timestamp: ~U[2018-12-14 14:20:14Z],
                raw_params: @mailgun_event_data_params_two
              } == Adapter.Mailgun.normalize_params(@mailgun_event_data_params_two)
     end

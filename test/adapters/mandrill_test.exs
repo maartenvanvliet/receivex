@@ -62,6 +62,7 @@ defmodule Receivex.Adapter.MandrillTest do
              subject: "This is an example webhook message",
              text: "This is an example inbound message.\n",
              to: [{nil, "example@example.com"}],
+             timestamp: ~U[2013-05-10 19:28:22Z],
              raw_params: event1
            } == Adapter.Mandrill.normalize_params(event1)
   end
