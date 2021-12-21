@@ -1,6 +1,6 @@
 defmodule Receivex.Adapter.Mandrill do
   @moduledoc false
-  import Receivex.Parsers
+  import Receivex.Parser
 
   @behaviour Receivex.Adapter
 

@@ -2,7 +2,7 @@ defmodule Receivex.Adapter.Mailgun do
   @moduledoc false
   @behaviour Receivex.Adapter
 
-  import Receivex.Parsers
+  import Receivex.Parser
 
   def handle_webhook(conn, handler, opts) do
     payload = conn.body_params
