@@ -5,12 +5,27 @@ defmodule Receivex.Email do
   @type address :: {String.t(), String.t()}
 
   @type t :: %__MODULE__{
-          sender: String.t(),
-          to: [address],
-          from: address,
-          html: String.t(),
-          text: String.t(),
-          subject: String.t()
+          message_id: String.t(),
+          event: String.t(),
+          sender: String.t() | nil,
+          to: [address] | nil,
+          from: address | nil,
+          subject: String.t() | nil,
+          html: String.t() | nil,
+          text: String.t() | nil,
+          timestamp: DateTime.t() | nil,
+          raw_params: map()
         }
-  defstruct [:sender, :to, :from, :subject, :html, :text]
+  defstruct [
+    :message_id,
+    :event,
+    :sender,
+    :to,
+    :from,
+    :subject,
+    :html,
+    :text,
+    :timestamp,
+    :raw_params
+  ]
 end

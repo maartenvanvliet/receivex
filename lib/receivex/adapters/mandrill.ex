@@ -1,11 +1,13 @@
 defmodule Receivex.Adapter.Mandrill do
   @moduledoc false
+  import Receivex.Parser
+
   @behaviour Receivex.Adapter
 
   @mandrill_header "x-mandrill-signature"
 
   # Mandrill expects the webhook to respond to head req
-  def handle_webhook(%{method: "HEAD"} = conn, _, _opts), do: {:ok, conn}
+  def handle_webhook(conn = %{method: "HEAD"}, _, _opts), do: {:ok, conn}
 
   def handle_webhook(conn, handler, opts) do
     url = Keyword.fetch!(opts, :url)
@@ -63,21 +65,32 @@ defmodule Receivex.Adapter.Mandrill do
     |> Enum.reject(&is_nil/1)
   end
 
-  def normalize_params(%{"event" => "inbound", "msg" => email}) do
+  def normalize_params(
+        email = %{
+          "event" => event,
+          "msg" =>
+            msg = %{
+              "subject" => subject,
+              "to" => to,
+              "html" => html,
+              "text" => text,
+              "headers" => %{"Message-Id" => message_id}
+            },
+          "ts" => ts
+        }
+      ) do
     %Receivex.Email{
-      from: {email["from_name"], email["from_email"]},
-      subject: email["subject"],
-      to: recipients(email),
-      html: email["html"],
-      text: email["text"]
+      message_id: message_id,
+      event: event,
+      from: {msg["from_name"], msg["from_email"]},
+      subject: subject,
+      to: parse_recipients(to),
+      html: html,
+      text: text,
+      timestamp: parse_timestamp(ts),
+      raw_params: email
     }
   end
 
-  def normalize_params(_) do
-    nil
-  end
-
-  defp recipients(%{"to" => recipients}) do
-    recipients |> Enum.map(fn [email, name] -> {name, email} end)
-  end
+  def normalize_params(_), do: nil
 end

@@ -2,6 +2,8 @@ defmodule Receivex.Adapter.Mailgun do
   @moduledoc false
   @behaviour Receivex.Adapter
 
+  import Receivex.Parser
+
   def handle_webhook(conn, handler, opts) do
     payload = conn.body_params
 
@@ -21,46 +23,122 @@ defmodule Receivex.Adapter.Mailgun do
   end
 
   defp valid_webhook_request?(
-         %{"timestamp" => ts, "token" => token, "signature" => expected_signature},
+         %{
+           "signature" =>
+             signature = %{
+               "timestamp" => timestamp,
+               "token" => token,
+               "signature" => expected_signature
+             }
+         },
          api_key
-       ) do
-    data = ts <> token
+       )
+       when is_map(signature) do
+    valid_signature?(timestamp, token, expected_signature, api_key)
+  end
 
-    signature =
-      :crypto.mac(:hmac, :sha256, api_key, data)
-      |> Base.encode16(case: :lower)
-
-    Plug.Crypto.secure_compare(signature, expected_signature)
+  defp valid_webhook_request?(
+         %{
+           "timestamp" => timestamp,
+           "token" => token,
+           "signature" => expected_signature
+         },
+         api_key
+       )
+       when is_binary(timestamp) do
+    valid_signature?(timestamp, token, expected_signature, api_key)
   end
 
   defp valid_webhook_request?(_, _), do: false
 
-  def normalize_params(email) do
+  defp valid_signature?(timestamp, token, expected_signature, api_key) do
+    data = timestamp <> token
+
+    :crypto.mac(:hmac, :sha256, api_key, data)
+    |> Base.encode16(case: :lower)
+    |> Plug.Crypto.secure_compare(expected_signature)
+  end
+
+  @doc """
+  Handle Mailgun v3 'event-data' webhook type:
+  https://documentation.mailgun.com/en/latest/api-webhooks.html?highlight=webhooks#webhooks
+  """
+  def normalize_params(
+        email = %{
+          "event-data" => %{
+            "envelope" => %{
+              "sender" => sender
+            },
+            "event" => event,
+            "message" => %{
+              "headers" => %{
+                "from" => from,
+                "message-id" => message_id,
+                "subject" => subject,
+                "to" => to
+              }
+            },
+            "timestamp" => timestamp
+          }
+        }
+      ) do
     %Receivex.Email{
-      from: from(email),
-      subject: email["subject"],
-      to: recipients(email),
-      sender: email["Sender"],
-      html: email["body-html"],
-      text: email["body-plain"]
+      message_id: message_id,
+      event: event,
+      sender: sender,
+      to: parse_recipients(to),
+      from: parse_address(from),
+      subject: subject,
+      timestamp: parse_timestamp(timestamp),
+      raw_params: email
     }
   end
 
-  defp from(%{"From" => from}) do
-    parse_address(from)
-  end
-
-  @regex ~r/(?<name>.*)<(?<email>.*)>/
-  defp parse_address(address) do
-    result = Regex.named_captures(@regex, address)
-
-    {
-      String.trim(result["name"]),
-      String.trim(result["email"])
+  def normalize_params(
+        email = %{
+          "event-data" => %{
+            "event" => event,
+            "message" => %{
+              "headers" => %{
+                "message-id" => message_id
+              }
+            },
+            "timestamp" => timestamp
+          }
+        }
+      ) do
+    %Receivex.Email{
+      message_id: message_id,
+      event: event,
+      timestamp: parse_timestamp(timestamp),
+      raw_params: email
     }
   end
 
-  defp recipients(%{"To" => recipients}) do
-    recipients |> String.split(",") |> Enum.map(fn address -> parse_address(address) end)
+  def normalize_params(
+        email = %{
+          "From" => from,
+          "Message-Id" => message_id,
+          "Sender" => sender,
+          "Subject" => subject,
+          "To" => to,
+          "body-html" => html,
+          "body-plain" => text,
+          "timestamp" => timestamp
+        }
+      ) do
+    %Receivex.Email{
+      message_id: message_id,
+      sender: sender,
+      to: parse_recipients(to),
+      from: parse_address(from),
+      subject: subject,
+      html: html,
+      text: text,
+      timestamp: parse_timestamp(timestamp),
+      raw_params: email
+    }
   end
+
+  def normalize_params(_), do: nil
 end

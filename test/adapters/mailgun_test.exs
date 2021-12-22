@@ -4,10 +4,10 @@ defmodule Receivex.Adapter.MailgunTest do
 
   alias Receivex.Adapter
 
-  @mailgun_params %{
+  @mailgun_standard_params %{
     "Content-Type" => "multipart/mixed; boundary=\"------------020601070403020003080006\"",
     "Date" => "Fri, 26 Apr 2013 11:50:29 -0700",
-    "From" => "From Bob <bob@mg.example.com>",
+    "From" => "Bob <bob@mg.example.com>",
     "In-Reply-To" => "<517AC78B.5060404@mg.example.com>",
     "Message-Id" => "<517ACC75.5010709@mg.example.com>",
     "Mime-Version" => "1.0",
@@ -52,40 +52,134 @@ defmodule Receivex.Adapter.MailgunTest do
     "token" => "cc68b711f7f0de0db07af0ca3836e993068498a3b449e31646"
   }
 
-  defp setup_webhook do
+  @mailgun_event_data_params_one %{
+    "event-data" => %{
+      "envelope" => %{
+        "sender" => "bob@mg.example.com"
+      },
+      "event" => "delivered",
+      "message" => %{
+        "attachments" => [],
+        "headers" => %{
+          "from" => "Bob <bob@mg.example.com>",
+          "message-id" => "<517ACC75.5010709@mg.example.com>",
+          "subject" => "Re: Sample POST request",
+          "to" => "To Alice <alice@mg.example.com>"
+        }
+      },
+      "recipient" => "monica@mg.example.com",
+      "timestamp" => 1_544_797_214.955656
+    },
+    "signature" => %{
+      "signature" => "6389a84f6a08275ef70b34a6a4a71380c181ef97b1aea12a47293a116cee60bc",
+      "timestamp" => "1544797214",
+      "token" => "cc68b711f7f0de0db07af0ca3836e993068498a3b449e31646"
+    }
+  }
+
+  @mailgun_event_data_params_two %{
+    "event-data" => %{
+      "event" => "delivered",
+      "message" => %{
+        "headers" => %{
+          "message-id" => "<517ACC75.5010709@mg.example.com>"
+        }
+      },
+      "timestamp" => 1_544_797_214.955656
+    },
+    "signature" => %{
+      "signature" => "6389a84f6a08275ef70b34a6a4a71380c181ef97b1aea12a47293a116cee60bc",
+      "timestamp" => "1544797214",
+      "token" => "cc68b711f7f0de0db07af0ca3836e993068498a3b449e31646"
+    }
+  }
+
+  defp setup_webhook(mailgun_params) do
     conn = conn(:post, "/_incoming", "raw_body")
 
-    %{conn | body_params: @mailgun_params}
+    %{conn | body_params: mailgun_params}
   end
 
-  test "processes valid webhook" do
-    conn = setup_webhook()
+  describe "'standard' webhook" do
+    test "processes valid webhook" do
+      conn = setup_webhook(@mailgun_standard_params)
 
-    {:ok, _conn} = Adapter.Mailgun.handle_webhook(conn, TestProcessor, api_key: "some key")
+      {:ok, _conn} = Adapter.Mailgun.handle_webhook(conn, TestProcessor, api_key: "some key")
 
-    assert_receive {:email, %Receivex.Email{}}
+      assert_receive {:email, %Receivex.Email{}}
+    end
+
+    test "normalizes email" do
+      assert %Receivex.Email{
+               message_id: "<517ACC75.5010709@mg.example.com>",
+               sender: "bob@mg.example.com",
+               to: [{"To Alice", "alice@mg.example.com"}],
+               from: {"Bob", "bob@mg.example.com"},
+               subject: "Re: Sample POST request",
+               html: @mailgun_standard_params["body-html"],
+               text: @mailgun_standard_params["body-plain"],
+               timestamp: "1544797214",
+               raw_params: @mailgun_standard_params
+             } == Adapter.Mailgun.normalize_params(@mailgun_standard_params)
+    end
   end
 
-  test "returns error for valid webhook" do
-    conn = setup_webhook()
+  describe "'event-data' webhook with sender, to, from, and subject" do
+    test "processes valid webhook" do
+      conn = setup_webhook(@mailgun_event_data_params_one)
+
+      {:ok, _conn} = Adapter.Mailgun.handle_webhook(conn, TestProcessor, api_key: "some key")
+
+      assert_receive {:email, %Receivex.Email{}}
+    end
+
+    test "normalizes email" do
+      assert %Receivex.Email{
+               message_id: "<517ACC75.5010709@mg.example.com>",
+               event: "delivered",
+               sender: "bob@mg.example.com",
+               to: [{"To Alice", "alice@mg.example.com"}],
+               from: {"Bob", "bob@mg.example.com"},
+               subject: "Re: Sample POST request",
+               html: @mailgun_event_data_params_one["body-html"],
+               text: @mailgun_event_data_params_one["body-plain"],
+               timestamp: "1544797214.955656",
+               raw_params: @mailgun_event_data_params_one
+             } == Adapter.Mailgun.normalize_params(@mailgun_event_data_params_one)
+    end
+  end
+
+  describe "'event-data' webhook without sender, to, from, and subject" do
+    test "processes valid webhook" do
+      conn = setup_webhook(@mailgun_event_data_params_two)
+
+      {:ok, _conn} = Adapter.Mailgun.handle_webhook(conn, TestProcessor, api_key: "some key")
+
+      assert_receive {:email, %Receivex.Email{}}
+    end
+
+    test "normalizes email" do
+      assert %Receivex.Email{
+               message_id: "<517ACC75.5010709@mg.example.com>",
+               event: "delivered",
+               sender: nil,
+               to: nil,
+               from: nil,
+               subject: nil,
+               html: nil,
+               text: nil,
+               timestamp: "1544797214.955656",
+               raw_params: @mailgun_event_data_params_two
+             } == Adapter.Mailgun.normalize_params(@mailgun_event_data_params_two)
+    end
+  end
+
+  test "returns error when incorrect api_key" do
+    conn = setup_webhook(@mailgun_standard_params)
 
     {:error, _conn} =
       Adapter.Mailgun.handle_webhook(conn, TestProcessor, api_key: "incorrect key")
 
     refute_receive {:email, %Receivex.Email{}}
-  end
-
-  test "normalizes email" do
-    html = @mailgun_params["body-html"]
-    text = @mailgun_params["body-plain"]
-
-    assert %Receivex.Email{
-             from: {"From Bob", "bob@mg.example.com"},
-             html: html,
-             sender: "bob@mg.example.com",
-             subject: "Re: Sample POST request",
-             text: text,
-             to: [{"To Alice", "alice@mg.example.com"}]
-           } == Adapter.Mailgun.normalize_params(@mailgun_params)
   end
 end
