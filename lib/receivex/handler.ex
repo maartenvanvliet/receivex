@@ -1,6 +1,18 @@
 defmodule Receivex.Handler do
   @moduledoc """
-  Behaviour for handling incoming email
+  Behaviour for handling incoming webhook
   """
-  @callback process(email :: Receivex.Email.t()) :: :ok | {:error, String.t()}
+  @callback process(payload :: struct()) :: :ok | {:error, any()}
 end
+
+forward("_incoming",
+  to: Receivex,
+  init_opts: [
+    adapter: Receivex.Adapter.Mandrill,
+    adapter_opts: [
+      secret: "i8PTcm8glMgsfaWf75bS1FQ",
+      url: "http://example.com"
+    ],
+    handler: Example.Processor
+  ]
+)

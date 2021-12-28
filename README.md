@@ -2,9 +2,13 @@
 
 [![Build Status](https://travis-ci.com/maartenvanvliet/receivex.svg?branch=master)](https://travis-ci.com/maartenvanvliet/receivex) [![Hex pm](http://img.shields.io/hexpm/v/receivex.svg?style=flat)](https://hex.pm/packages/receivex) [![Hex Docs](https://img.shields.io/badge/hex-docs-9768d1.svg)](https://hexdocs.pm/receivex) [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-Package to deal with inbound email webhooks for several providers. Right now 
-Mailgun and Mandrill are supported.
+Package that makes it easy to deal with inbound webhooks.
 
+## Adapters
+
+Right now [Mailgun](./lib/receivex/adapters/mailgun.ex) and [Mandrill](./lib/receivex/adapters/mandrill.ex) webhooks are supported out of the box.
+
+You can implement your own adapter by following the existing adapters as an example.
 
 ## Installation
 

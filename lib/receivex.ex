@@ -1,7 +1,6 @@
 defmodule Receivex do
   @moduledoc """
-  Package to deal with inbound email webhooks for several providers. Right now
-  Mailgun and Mandrill are supported.
+  Package that makes it easy to deal with inbound webhooks.
 
 
   ## Installation
@@ -12,7 +11,7 @@ defmodule Receivex do
   ```elixir
   def deps do
   [
-    {:receivex, "~> 0.8.0"}
+    {:receivex, "~> 0.8.2"}
   ]
   end
   ```
@@ -20,36 +19,51 @@ defmodule Receivex do
 
   Example configuration for Mandrill with the Plug router
   ```elixir
-  forward("_incoming", to: Receivex, init_opts: [
-  adapter: Receivex.Adapter.Mandrill,
-  adapter_opts: [
-    secret: "i8PTcm8glMgsfaWf75bS1FQ",
-    url: "http://example.com"
-  ],
-  handler: Example.Processor]
+  forward("_incoming",
+    to: Receivex,
+    init_opts: [
+      adapter: Receivex.Adapter.Mandrill,
+      adapter_opts: [
+        secret: "i8PTcm8glMgsfaWf75bS1FQ",
+        url: "http://example.com"
+      ],
+      handler: Example.Processor
+    ]
   )
   ```
 
   Example configuration for Mandrill with the Phoenix router
   ```elixir
-  forward("_incoming", Receivex, [
-  adapter: Receivex.Adapter.Mandrill,
-  adapter_opts: [
-    secret: "i8PTcm8glMgsfaWf75bS1FQ",
-    url: "http://example.com"
-  ],
-  handler: Example.Processor]
+  forward("_incoming", Receivex,
+    adapter: Receivex.Adapter.Mandrill,
+    adapter_opts: [
+      secret: "i8PTcm8glMgsfaWf75bS1FQ",
+      url: "http://example.com"
+    ],
+    handler: Example.Processor
   )
   ```
 
   Example configuration for Mailgun with the Plug router
   ```elixir
-  forward("_incoming", to: Receivex, init_opts: [
-  adapter: Receivex.Adapter.Mailgun,
-  adapter_opts: [
-    api_key: "some-key"
-  ],
-  handler: Example.Processor]
+  forward("_incoming",
+    to: Receivex,
+    init_opts: [
+      adapter: Receivex.Adapter.Mailgun,
+      adapter_opts: [
+        api_key: "some-key"
+      ],
+      handler: Example.Processor
+    ]
+  )
+  ```
+
+  Example configuration for custom adapter
+  ```elixir
+  forward("_incoming", Receivex,
+    adapter: Your.Custom.Adapter,
+    adapter_opts: [some_option: "some-option"],
+    handler: Your.Processor
   )
   ```
 
@@ -73,7 +87,6 @@ defmodule Receivex do
   @impl true
   def init(opts) do
     handler = Keyword.fetch!(opts, :handler)
-
     adapter = Keyword.fetch!(opts, :adapter)
     adapter_opts = Keyword.fetch!(opts, :adapter_opts)
 
@@ -88,8 +101,14 @@ defmodule Receivex do
       {:ok, conn} ->
         conn |> send_resp(:ok, "ok") |> halt()
 
+      {:ok, conn, resp} ->
+        conn |> send_resp(:ok, Jason.encode!(resp)) |> halt()
+
       {:error, conn} ->
         conn |> send_resp(:forbidden, "bad signature") |> halt()
+
+      {:error, conn, error_resp} ->
+        conn |> send_resp(error_resp.code, Jason.encode!(error_resp.body)) |> halt()
     end
   end
 end
